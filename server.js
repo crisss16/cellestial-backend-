@@ -12,7 +12,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 1. Încărcăm variabilele din .env.local
-dotenv.config({ path: path.join(__dirname, '.env.local') });
+dotenv.config();
+
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 // 2. Inițializăm Stripe (acum process.env.STRIPE_SECRET_KEY este populat)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -21,7 +23,8 @@ const app = express();
 
 // 3. Configurare CORS și JSON
 app.use(cors({
-    origin: "http://localhost:5173" 
+    origin: ["http://localhost:5173", /\.vercel\.app$/], // Permitem frontend-ului local și orice subdomeniu vercel
+    credentials: true
 }));
 app.use(express.json());
 
@@ -63,8 +66,8 @@ app.post("/create-checkout-session", async (req, res) => {
         },
         quantity: item.quantity,
       })),
-      success_url: "http://localhost:5173/payment-success",
-      cancel_url: "http://localhost:5173/checkout",
+      success_url: `${FRONTEND_URL}/payment-success`,
+      cancel_url: `${FRONTEND_URL}/checkout`,
     });
 
     // TRIMITEM URL-UL SESIUNII ÎNAPOI
@@ -94,4 +97,5 @@ app.post("/api/upload-avatar", upload.single("avatar"), async (req, res) => {
   }
 });
 
-app.listen(5000, () => console.log("🔥 Server-ul Cellestial rulează pe portul 5000"));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, "0.0.0.0", () => console.log(`🔥 Server-ul Cellestial rulează pe portul ${PORT}`));
