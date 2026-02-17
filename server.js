@@ -11,52 +11,48 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 1. Încărcăm variabilele din .env.local
+// 1. Încărcăm variabilele
 dotenv.config();
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
-// 2. Inițializăm Stripe (acum process.env.STRIPE_SECRET_KEY este populat)
+// 2. Inițializăm Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// 3. Configurare CORS și JSON
-const app = express();
+const app = express(); // DEFINIT O SINGURĂ DATĂ
 
-// 3. Configurare CORS (Folosește variabila deja importată sus)
+// 3. Configurare CORS
 app.use(cors({
-  origin: ['https://cellestial-frontend.vercel.app', 'http://localhost:5173'], // Permite și Vercel și testarea locală
+  origin: ['https://cellestial-frontend.vercel.app', 'http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
+
 app.use(express.json());
 
-// 4. Configurare Cloudinary (folosind variabilele din .env.local)
+// 4. Configurare Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Logger pentru cereri
+// Logger
 app.use((req, res, next) => {
     console.log(`🚀 Cerere primită: ${req.method} ${req.url}`);
     next();
 });
 
-console.log("--- 🛰️ STATUS SERVER ---");
-console.log("Stripe Key exists:", !!process.env.STRIPE_SECRET_KEY);
-console.log("Cloud Name:", process.env.CLOUDINARY_CLOUD_NAME);
-console.log("API Key loaded:", !!process.env.CLOUDINARY_API_KEY);
-console.log("-----------------------");
+const upload = multer({ dest: "/tmp/uploads/" }); // Folosim /tmp pentru servere tip Render/Vercel
 
-const upload = multer({ dest: "uploads/" });
+// --- RUTE ---
 
-// --- RUTA STRIPE ---
+app.get("/", (req, res) => res.send("API Cellestial is Running... 🛰️"));
+
+// Ruta Stripe
 app.post("/create-checkout-session", async (req, res) => {
   try {
     const { items } = req.body;
-    console.log("🛒 Produse primite:", items);
-
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
@@ -71,16 +67,13 @@ app.post("/create-checkout-session", async (req, res) => {
       success_url: `${FRONTEND_URL}/payment-success`,
       cancel_url: `${FRONTEND_URL}/checkout`,
     });
-
-    // TRIMITEM URL-UL SESIUNII ÎNAPOI
     res.json({ id: session.id, url: session.url });
   } catch (error) {
-    console.error("❌ STRIPE ERROR:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// --- RUTA UPLOAD AVATAR ---
+// Ruta Upload Avatar
 app.post("/api/upload-avatar", upload.single("avatar"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
@@ -91,13 +84,13 @@ app.post("/api/upload-avatar", upload.single("avatar"), async (req, res) => {
     });
 
     if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-
     res.json({ url: result.secure_url });
   } catch (err) {
-    console.error("❌ UPLOAD ERROR:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, "0.0.0.0", () => console.log(`🔥 Server-ul Cellestial rulează pe portul ${PORT}`));
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`🔥 Server rulează pe portul ${PORT}`);
+});
