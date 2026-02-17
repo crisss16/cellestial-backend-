@@ -21,6 +21,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const app = express(); // DEFINIT O SINGURĂ DATĂ
 
+app.get("/", (req, res) => {
+    res.send("Serverul este LIVE! 🛰️");
+});
+
 // 3. Configurare CORS
 app.use(cors({
   origin: ['https://cellestial-frontend.vercel.app', 'http://localhost:5173'],
