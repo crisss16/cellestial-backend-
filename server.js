@@ -19,12 +19,12 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 // 2. Inițializăm Stripe (acum process.env.STRIPE_SECRET_KEY este populat)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+// 3. Configurare CORS și JSON
 const app = express();
 
-// 3. Configurare CORS și JSON
-const cors = require('cors');
+// 3. Configurare CORS (Folosește variabila deja importată sus)
 app.use(cors({
-  origin: 'https://cellestial-frontend.vercel.app', // Adresa exactă a site-ului tău
+  origin: ['https://cellestial-frontend.vercel.app', 'http://localhost:5173'], // Permite și Vercel și testarea locală
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
