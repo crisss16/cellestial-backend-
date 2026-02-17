@@ -22,9 +22,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const app = express();
 
 // 3. Configurare CORS și JSON
+const cors = require('cors');
 app.use(cors({
-    origin: ["http://localhost:5173", /\.vercel\.app$/], // Permitem frontend-ului local și orice subdomeniu vercel
-    credentials: true
+  origin: 'https://cellestial-frontend.vercel.app', // Adresa exactă a site-ului tău
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
 }));
 app.use(express.json());
 
